@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>Connected Shower</title>
+    <style>
+      body {
+        background: black;
+        color: white;
+        font-family: "Arial";
+        text-align: center;
+        padding: 250px 250px 0 250px;
+      }
+      h1 {
+        font-size: 58px;
+        font-weight: normal;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-2.2.2.min.js" integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI=" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      jQuery(function($) {
+        var counter = 0;
+        var messages = [
+          "Good morning Drew, welcome to your shower",
+          "The weather today is a low 55 degrees and a high 75 degrees",
+          "Today's headlines are:",
+          "Poop is the new black!",
+          "Bears are the hot summer style"
+        ];
+        var message;
+        var $h1 = $("h1");
+
+        setInterval(function() {
+          $h1.fadeOut(1500, function() {
+            message = messages[counter];
+            $h1.text(message);
+            
+            $h1.fadeIn(1500, function () {
+              counter = counter + 1;
+              if (counter == messages.length) {
+                counter = 0;
+              }         
+            });
+          });
+        }, (10 * 1000));
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1></h1>
+    </div>
+  </body>
+</html>
