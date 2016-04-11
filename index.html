@@ -1,52 +1,168 @@
 <html>
   <head>
     <title>Connected Shower</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <style>
       body {
         background: black;
         color: white;
         font-family: "Arial";
-        text-align: center;
-        padding: 250px 250px 0 250px;
+        padding: 0;
+        margin: 0;
       }
       h1 {
         font-size: 58px;
         font-weight: normal;
+        text-align: left;
+        margin: 0;
+      }
+      h1.left {
+        font-size: 38px;
+        position: absolute;
+        top: 50px;
+        left: 50px;
+      }
+      h1.right {
+        position: absolute;
+        top: 40px;
+        right: 50px;
+        margin: 0 0 0 310px;
+      }
+      div.weather i {
+        width: 50px;
+        text-align: center;
+      }
+      div.icons {
+        padding: 5px;
+      }
+      div.icons img {
+        background: #fff;
+      }
+      div.preview {
+        font-size: 38px;
+        color: white;
+        margin: 20px 0 0;
+        line-height: 48px;
       }
     </style>
     <script src="https://code.jquery.com/jquery-2.2.2.min.js" integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
     <script type="text/javascript">
-      jQuery(function($) {
-        var counter = 0;
-        var messages = [
-          "Good morning Drew, welcome to your shower",
-          "The weather today is a low 55 degrees and a high 75 degrees",
-          "Today's headlines are:",
-          "Poop is the new black!",
-          "Bears are the hot summer style"
-        ];
-        var message;
-        var $h1 = $("h1");
+      var counter  = 0;
+      var messages = [];
+      var message;
 
-        setInterval(function() {
-          $h1.fadeOut(1500, function() {
-            message = messages[counter];
-            $h1.text(message);
-            
-            $h1.fadeIn(1500, function () {
-              counter = counter + 1;
-              if (counter == messages.length) {
-                counter = 0;
-              }         
+      jQuery(function($) {
+        var $h1      = $("h1.right");
+        var $title   = $("h1.right div.title");
+        var $preview = $('h1.right div.preview');
+
+        // Scroll through the messages array
+        function updateMessage() {
+          message = messages[counter];
+          $title.text(message.title);
+          $preview.text(message.description);
+          
+          $h1.fadeIn(1500, function () {
+            counter = counter + 1;
+            if (counter == messages.length) {
+              counter = 0;
+            }         
+          });
+        }
+
+        function updateMessages() {
+          $.ajax({
+            url: "http://hn.algolia.com/api/v1/search?tags=front_page",
+            crossDomain: true
+          }).done(function (res) {
+            messages = [];
+
+            // Iterate on the hits
+            $.each(res.hits, function(index, hit) {
+              var data = {
+                title: hit.title,
+                url: hit.url,
+                description: ""
+              };
+
+              messages.push(data);
+
+              // Grab the preview
+              $.ajax({
+                url: "http://iframe.ly/api/iframely?api_key=b323de8247ae88fe8fa80f&url=" + hit.url,
+                crossDomain: true
+              }).done(function (res) {
+                messages[index].description = res.meta.description;
+              });
             });
           });
-        }, (10 * 1000));
+        }
+
+        function updateWeather() {
+          $.ajax({
+            url: "http://api.openweathermap.org/data/2.5/weather?lat=33.7714&lon=-84.2978&units=imperial&appid=a00e847db9779315923290d7a326b198",
+            crossDomain: true
+          }).done(function (res) {
+            var html = "<div class='temp-max'><i class='fa fa-cloud-upload'></i> " + res.main.temp_max + "&deg;</div>" +
+                       "<div class='temp'><i class='fa fa-cloud'></i> " + res.main.temp + "&deg;</div>" + 
+                       "<div class='temp-min'><i class='fa fa-cloud-download'></i> " + res.main.temp_min + "&deg;</div>" + 
+                       "<div class='humidity'><i class='fa fa-tint'></i> " + res.main.humidity + "%</div>" +
+                       "<div class='icons'>";
+
+            // Get the icons
+            for (var i in res.weather) {
+              var data = res.weather[i];
+
+              html += "<img src='http://openweathermap.org/img/w/" + data.icon + ".png'>";
+            }
+
+            html += "</div>";
+
+            $("div.weather").html(html);
+          }); 
+        }
+
+        function updateTime() {
+          $("div.time").text(moment().format('LTS'));
+          $("div.date").text(moment().format('L'));
+        }
+
+        // Update the messages every 30 seconds
+        setInterval(function() {
+          $h1.fadeOut(1500, function() {
+            updateMessage();
+          });
+        }, (30 * 1000));
+
+        // Update the weather and messages every hour
+        setInterval(function () {
+          updateWeather();
+          updateMessages();
+        }, (60 * 60 * 1000));
+
+        // Update the time every second
+        setInterval(function () {
+          updateTime();
+        }, 1000);
+
+        updateWeather();
+        updateMessages();
+        updateTime();
       });
     </script>
   </head>
   <body>
     <div class="container">
-      <h1></h1>
+      <h1 class="left">
+        <div class="date"></div>
+        <div class="time"></div>
+        <div class="weather"></div>
+      </h1>
+      <h1 class="right">
+        <div class="title"></div>
+        <div class="preview"></div>
+      </h1>
     </div>
   </body>
 </html>
