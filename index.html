@@ -135,11 +135,11 @@
           });
         }, (30 * 1000));
 
-        // Update the weather and messages every hour
+        // Update the weather and messages every 24 hours
         setInterval(function () {
           updateWeather();
           updateMessages();
-        }, (60 * 60 * 1000));
+        }, (24 * 60 * 60 * 1000));
 
         // Update the time every second
         setInterval(function () {
